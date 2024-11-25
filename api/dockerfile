@@ -1,0 +1,23 @@
+# Imagen base con Python 3.9 o superior
+FROM python:3.9-slim
+
+# Configurar la variable de entorno para que Python no genere archivos .pyc
+ENV PYTHONUNBUFFERED=1
+
+# Crear y configurar el directorio de trabajo
+WORKDIR /app
+
+# Copiar los archivos necesarios
+COPY ./requirements.txt /app/requirements.txt
+COPY ./main.py /app/main.py
+COPY ./models /app/models
+
+# Instalar las dependencias
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r /app/requirements.txt
+
+# Exponer el puerto que usará la aplicación
+EXPOSE 8000
+
+# Comando para ejecutar la aplicación
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
