@@ -1,23 +1,29 @@
-# Imagen base con Python 3.9 o superior
+# Usar una imagen base de Python
 FROM python:3.9-slim
 
-# Configurar la variable de entorno para que Python no genere archivos .pyc
-ENV PYTHONUNBUFFERED=1
-
-# Crear y configurar el directorio de trabajo
+# Configurar el directorio de trabajo en el contenedor
 WORKDIR /app
 
-# Copiar los archivos necesarios
-COPY ./requirements.txt /app/requirements.txt
-COPY ./main.py /app/main.py
-COPY ./models /app/models
+# Copiar el archivo de requirements
+COPY requirements.txt requirements.txt
 
-# Instalar las dependencias
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r /app/requirements.txt
+# Actualizar pip y aumentar el timeout y agregar mirror de PyPi para hacer el pip más rápido
+RUN pip install --upgrade pip && pip install --no-cache-dir --default-timeout=120 -r requirements.txt -i https://pypi.org/simple
 
-# Exponer el puerto que usará la aplicación
+# Copiar los archivos de la API
+COPY . .
+
+# Exponer el puerto 8000
 EXPOSE 8000
 
 # Comando para ejecutar la aplicación
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+
+# 0.0.0.0 asegura que la aplicación esté disponible a través del puerto mapeado en el docker-compose.yml.
+# Ejemplo: En mi configuración, el backend (API) usa 0.0.0.0:8000. Esto asegura que el servicio esté
+# accesible tanto desde el frontend (contenedor Streamlit) como desde tu navegador en http://localhost:8000.
+
+
+# puerto 8000 porque es comúnmente usado por fastapi. funciona
+# puerto 8051 porque es comúnmente usado por streamlit. funciona

@@ -4,9 +4,9 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import mlflow
 import pandas as pd
-import pickle
 import joblib
 from mlflow.tracking import MlflowClient
+from sklearn.ensemble import RandomForestClassifier
 
 # Configurar el registro de logs
 logging.basicConfig(level=logging.INFO)
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 mlflow.set_tracking_uri("https://dagshub.com/colome8/PROYECTO_OSKU.mlflow")
 
 # Variables globales para modelos y artefactos
-model = None
+model = RandomForestClassifier()
 scaler = None
 label_encoder = None
 
@@ -42,15 +42,17 @@ def load_models():
         client = MlflowClient()
         model_name = "prefect-modelos"
         model_alias = "Champion"  # Usar el alias Champion
-        alias_info = client.get_model_by_alias(name=model_name,alias=model_alias)
+        alias_info = client.get_model_version_by_alias(name=model_name, alias=model_alias)
         run_id = alias_info.run_id
-        # RandomForestClassifier
-        model_uri = f"runs:/{run_id}/RandomForestClassifier"
+        # modelos
+        model_uri = f"runs:/{run_id}/modelos"
         model = mlflow.pyfunc.load_model(model_uri=model_uri)
+        print("ENTRE!!!!!!!!!!!!!!!!!!!!!!!")
         
     except Exception as e:
         logger.error(f"Error al cargar el modelo: {e}")
         model = None
+        print("NOOOOOOOOOOOOOOOOOOOOO ENTRE!!!!!!!!!!!!!!!!!!!!!!!")
 
     # Cargar el label encoder
     if label_encoder is None:
@@ -100,10 +102,10 @@ def predict(request: PredictionRequest):
 
     try:
        # Convertir los datos del request a un array
-        input_data = [request.sessions, request.drives, request.total_sessions]
+        input_data = [[request.sessions, request.drives, request.total_sessions]]
 
         # Asegurarse de que el preprocesador esté ajustado y transformar los datos
-        processed_data = scaler.transform([input_data])  # Usamos una lista dentro de la lista para que sea el formato adecuado
+        processed_data = scaler.transform(input_data)  
 
         # Realizar la predicción
         prediction = model.predict(processed_data)
@@ -111,7 +113,10 @@ def predict(request: PredictionRequest):
         # Decodificar la predicción
         decoded_prediction = label_encoder.inverse_transform(prediction)
 
-        return {"prediction": decoded_prediction[0]}
+        # Convertir a un tipo estándar de Python
+        prediction_output = int(decoded_prediction[0])
+
+        return {"prediction": prediction_output}
     except Exception as e:
         logger.error(f"Error durante la predicción: {e}")
         raise HTTPException(
