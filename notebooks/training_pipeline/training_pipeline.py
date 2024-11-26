@@ -13,7 +13,6 @@ import mlflow.sklearn
 from mlflow.tracking import MlflowClient
 import time
 import pandas as pd
-from sklearn.feature_extraction import  DictVectorizer
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
 from sklearn.model_selection import RandomizedSearchCV
@@ -130,8 +129,14 @@ def run_models(X_train, X_test, y_train, y_test):
                 else:
                     print(f"Advertencia: {label_encoder_path} no encontrado.")
 
-                # Registrar el modelo
-                mlflow.sklearn.log_model(ml_model, model_name)
+                scaler_path = "C:\\Users\\colom\\OneDrive - ITESO\\iteso\\5to semestre\\cienciadatos\\PROYECTO_OSKU\\models\\scaler.pkl"
+        
+                if pathlib.Path(scaler_path).exists():
+                    mlflow.log_artifact(scaler_path, artifact_path="artifacts")
+                else:
+                    print(f"Advertencia: {scaler_path} no encontrado.")    
+
+                mlflow.sklearn.log_model(ml_model, "modelos")
 
                 print(f"Modelo '{model_name}' registrado con precisión: {accuracy:.4f}")
 
@@ -153,8 +158,6 @@ def randomized_search(X_train, X_test, y_train, y_test):
             "params": {"n_estimators": [50, 100], "max_depth": [5, 10, None]},
         },
     ]
-
-    dv = DictVectorizer()
 
     # Ejecutar runs anidados
     with mlflow.start_run(run_name="Prefect-Hyperparameter-Tuning"):
@@ -206,8 +209,14 @@ def randomized_search(X_train, X_test, y_train, y_test):
                 else:
                     print(f"Advertencia: {label_encoder_path} no encontrado.")
 
-                # Registrar el mejor modelo
-                mlflow.sklearn.log_model(best_model, model_name)
+                scaler_path = "C:\\Users\\colom\\OneDrive - ITESO\\iteso\\5to semestre\\cienciadatos\\PROYECTO_OSKU\\models\\scaler.pkl"
+        
+                if pathlib.Path(scaler_path).exists():
+                    mlflow.log_artifact(scaler_path, artifact_path="artifacts")
+                else:
+                    print(f"Advertencia: {scaler_path} no encontrado.")
+
+                mlflow.sklearn.log_model(best_model, "modelos")
 
                 print(f"Modelo '{model_name}' registrado con precisión en prueba: {accuracy:.4f}")
 
