@@ -1,0 +1,29 @@
+# Usar una imagen base de Python
+FROM python:3.9-slim
+
+# Configurar el directorio de trabajo en el contenedor
+WORKDIR /app
+
+# Copiar el archivo de requirements
+COPY requirements.txt requirements.txt
+
+# Actualizar pip y aumentar el timeout y agregar mirror de PyPi para hacer el pip más rápido
+RUN pip install --upgrade pip && pip install --no-cache-dir --default-timeout=120 -r requirements.txt -i https://pypi.org/simple
+
+# Copiar los archivos de la API
+COPY . .
+
+# Exponer el puerto 8000
+EXPOSE 8000
+
+# Comando para ejecutar la aplicación
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+
+# 0.0.0.0 asegura que la aplicación esté disponible a través del puerto mapeado en el docker-compose.yml.
+# Ejemplo: En mi configuración, el backend (API) usa 0.0.0.0:8000. Esto asegura que el servicio esté
+# accesible tanto desde el frontend (contenedor Streamlit) como desde tu navegador en http://localhost:8000.
+
+
+# puerto 8000 porque es comúnmente usado por fastapi. funciona
+# puerto 8051 porque es comúnmente usado por streamlit. funciona
